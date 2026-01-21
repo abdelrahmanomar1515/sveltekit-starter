@@ -1,0 +1,21 @@
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from './schema';
+
+export function getDB(env?: { DATABASE_URL: string }) {
+	if (!env?.DATABASE_URL) {
+		throw new Error('DATABASE_URL is not set');
+	}
+
+	const client = postgres(env.DATABASE_URL);
+	return drizzle(client, { schema });
+}
+
+export type DB = ReturnType<typeof getDB>;
+
+export type TX = Parameters<DB['transaction']>[0] extends infer Callback
+	? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+		Callback extends (tx: infer T) => any
+		? T
+		: never
+	: never;
